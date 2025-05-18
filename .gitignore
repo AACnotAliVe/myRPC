@@ -6,7 +6,4 @@
 *.so
 *.log
 *.deb
-server
-client
-mysyslog
 /daemon/
