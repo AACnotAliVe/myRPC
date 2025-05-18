@@ -1,0 +1,12 @@
+/build/
+/repo/
+/*.deb
+*.o
+*.a
+*.so
+*.log
+*.deb
+server
+client
+mysyslog
+/daemon/
