@@ -13,7 +13,16 @@
 
 ## Настройки
 
-/
+Проект имеет настраиваемые конфигурационные файлы: myRPC.conf , myRPC.server.
+
+# myRPC.conf
+
+port = <Укажите номер порта>
+socket_type = <stream (TCP),dgram (UDP)>
+```
+Если не настроить то сервер берет порт по умолчанию 25565 и тип сокета stream!
+```
+
 
 
 ## Dependencies
@@ -42,3 +51,5 @@ To build the application:
    ./gradlew assembleRelease
    ```
 3. The APK will be in `app/build/outputs/apk/release/`
+
+## Запуск
