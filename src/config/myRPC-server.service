@@ -1,15 +1,13 @@
 [Unit]
-Description=myRPC-server
+Description=myRPC Server Service
 After=network.target
 
 [Service]
 Type=simple
-# Указать /полный/путь/до/myRPC-server!!
-ExecStart=
+User=root
+ExecStart=/usr/local/bin/myRPC-server -c /etc/myRPC/myRPC.conf
 Restart=on-failure
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
+
 
 [Install]
 WantedBy=multi-user.target
