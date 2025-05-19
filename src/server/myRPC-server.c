@@ -16,26 +16,6 @@
 
 #define BUFFER_SIZE 4096
 
-//Демонизация
-void daemonize() {
-    pid_t pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS); // Родитель выходит
-
-    // Создание новой сессии
-    if (setsid() < 0) exit(EXIT_FAILURE);
-
-    signal(SIGCHLD, SIG_IGN);
-    signal(SIGHUP, SIG_IGN);
-
-    pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS); // Второй родитель выходит
-
-    umask(0);
-    chdir("/");
-    }
-
 int user_allowed(const char *username) {
     FILE *fp = fopen("/etc/myRPC/users.conf", "r");
     if (!fp) return 0;
@@ -53,10 +33,30 @@ int user_allowed(const char *username) {
 }
 
 char *trim(char *str) {
-    while (*str == ' ' || *str == '\t') str++; // leading spaces
+    while (*str == ' ' || *str == '\t') str++;
     char *end = str + strlen(str) - 1;
     while (end > str && (*end == ' ' || *end == '\t')) *end-- = '\0';
     return str;
+}
+
+char *shell_escape(const char *input) {
+    size_t len = strlen(input);
+    char *escaped = malloc(len * 4 + 3);
+    if (!escaped) return NULL;
+
+    char *p = escaped;
+    *p++ = '\'';
+    for (size_t i = 0; i < len; ++i) {
+        if (input[i] == '\'') {
+            memcpy(p, "'\\''", 4);
+            p += 4;
+        } else {
+            *p++ = input[i];
+        }
+    }
+    *p++ = '\'';
+    *p = '\0';
+    return escaped;
 }
 
 char *read_file(const char *filename) {
@@ -109,15 +109,23 @@ void handle_request(const char *buffer, char *response_json) {
             snprintf(out_file, sizeof(out_file), "%s.stdout", tmp_template);
             snprintf(err_file, sizeof(err_file), "%s.stderr", tmp_template);
 
-            char command[1024];
-            snprintf(command, sizeof(command), "%s > %s 2> %s", cmd, out_file, err_file);
+            char *safe_cmd = shell_escape(cmd);
+            if (!safe_cmd) {
+                log_error("Не удалось выделить память для экранирования команды");
+                json_object_object_add(resp, "code", json_object_new_int(1));
+                json_object_object_add(resp, "result", json_object_new_string("Internal error"));
+            } else {
+                char command[1024];
+                snprintf(command, sizeof(command), "sh -c %s > %s 2> %s", safe_cmd, out_file, err_file);
+                free(safe_cmd);
 
-            int ret = system(command);
-            char *output = read_file(ret == 0 ? out_file : err_file);
+                int ret = system(command);
+                char *output = read_file(ret == 0 ? out_file : err_file);
 
-            json_object_object_add(resp, "code", json_object_new_int(ret == 0 ? 0 : 1));
-            json_object_object_add(resp, "result", json_object_new_string(output));
-            free(output);
+                json_object_object_add(resp, "code", json_object_new_int(ret == 0 ? 0 : 1));
+                json_object_object_add(resp, "result", json_object_new_string(output));
+                free(output);
+            }
         }
     }
 
@@ -127,8 +135,6 @@ void handle_request(const char *buffer, char *response_json) {
 }
 
 int main() {
-    //Демонизация
-    daemonize();
     log_info("Запуск myRPC-server");
 
     int port = 1234;
@@ -212,7 +218,6 @@ int main() {
             char *reply = response_json;  // ваша функция обработки JSON-запроса
             send(client_sock, reply, strlen(reply), 0);
 
-            //free(reply);
             close(client_sock);
 
         } else {
@@ -228,11 +233,9 @@ int main() {
 
             char response_json[BUFFER_SIZE];
             handle_request(buffer, response_json);
-            char *reply = response_json;  // ваша функция обработки JSON-запроса
+            char *reply = response_json;
             sendto(sockfd, reply, strlen(reply), 0,
                    (struct sockaddr *)&client_addr, client_len);
-
-            //free(reply);
         }
     }
 
