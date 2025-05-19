@@ -12,23 +12,6 @@
 
 #define BUF_SIZE 4096
 
-//Экранирование 
-char *escape_special_chars(const char *input) {
-    size_t len = strlen(input);
-    char *escaped = malloc(len * 2 + 1);
-    if (!escaped) return NULL;
-
-    char *p = escaped;
-    for (size_t i = 0; i < len; i++) {
-        if (input[i] == '\\' || input[i] == '"') {
-            *p++ = '\\';
-        }
-        *p++ = input[i];
-    }
-    *p = '\0';
-    return escaped;
-}
-
 void print_usage(const char *prog) {
     printf("Usage: %s [OPTIONS]\n", prog);
     printf("Options:\n");
@@ -86,17 +69,10 @@ int main(int argc, char *argv[]) {
     }
     const char *username = pw->pw_name;
 
-    // Экранируем команду
-    char *escaped_cmd = escape_special_chars(command);
-    if (!escaped_cmd) {
-        fprintf(stderr, "Ошибка экранирования команды\n");
-        exit(EXIT_FAILURE);
-    }
-
     struct json_object *req = json_object_new_object();
+
     json_object_object_add(req, "login", json_object_new_string(username));
-    json_object_object_add(req, "command", json_object_new_string(escaped_cmd));
-    free(escaped_cmd);
+    json_object_object_add(req, "command", json_object_new_string(command));
 
     const char *json_str = json_object_to_json_string(req);
 
