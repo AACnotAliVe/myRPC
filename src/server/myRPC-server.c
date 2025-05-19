@@ -10,9 +10,31 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <json-c/json.h>
+#include <signal.h>
+#include <sys/stat.h>
 #include "mysyslog.h"
 
 #define BUFFER_SIZE 4096
+
+//Демонизация
+void daemonize() {
+    pid_t pid = fork();
+    if (pid < 0) exit(EXIT_FAILURE);
+    if (pid > 0) exit(EXIT_SUCCESS); // Родитель выходит
+
+    // Создание новой сессии
+    if (setsid() < 0) exit(EXIT_FAILURE);
+
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+
+    pid = fork();
+    if (pid < 0) exit(EXIT_FAILURE);
+    if (pid > 0) exit(EXIT_SUCCESS); // Второй родитель выходит
+
+    umask(0);
+    chdir("/");
+    }
 
 int user_allowed(const char *username) {
     FILE *fp = fopen("/etc/myRPC/users.conf", "r");
@@ -105,6 +127,8 @@ void handle_request(const char *buffer, char *response_json) {
 }
 
 int main() {
+    //Демонизация
+    daemonize();
     log_info("Запуск myRPC-server");
 
     int port = 1234;
