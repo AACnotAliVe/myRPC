@@ -40,6 +40,7 @@ $(BUILD_DIR)/mysyslog.o: $(SRC_DIR)/mysyslog/mysyslog.c
 
 clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf build-deb
 	bash clean.sh
 
 .PHONY: all clean dirs
