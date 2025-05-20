@@ -59,10 +59,6 @@ socket_type = <stream (TCP),dgram (UDP)>
 
 Установить можно используя .deb пакеты
 
-### dowload.sh
-
-Загружает все самое необходимое чтобы сервер смог запуститься 
-
 ### clean.sh
 
 Удаляет лишние файлы myRPC_XXXXXX в /tmp/
@@ -73,6 +69,7 @@ socket_type = <stream (TCP),dgram (UDP)>
 - python / Apache2 (Сетевой репозиторий)
 - git (Клонирование репозитория)
 - make (Сборка проекта)
+- fakeroot
 
 ## Сборка проекта
 
