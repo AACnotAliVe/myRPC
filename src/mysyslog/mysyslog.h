@@ -11,4 +11,4 @@ void mysyslog(int level, const char *format, ...);
 #define log_warning(...) mysyslog(LOG_WARNING, __VA_ARGS__)
 #define log_error(...)   mysyslog(LOG_ERR, __VA_ARGS__)
 
-#endif // MYSYSLOG_H
+#endif
