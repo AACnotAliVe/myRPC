@@ -1,46 +1,59 @@
 CC = gcc
-CFLAGS = -Wall -Isrc/mysyslog
-LDFLAGS =
-JSONC_FLAGS = $(shell pkg-config --cflags --libs json-c)
+CFLAGS = -Wall -I../../src/mysyslog
+LDFLAGS = -ljson-c
+NAME = myRPC-server
+SRC = myRPC-server.c
+OBJ = ../../build/myRPC-server.o
+SYSLOG_OBJ = ../../build/mysyslog.o
+BIN = ../../bin/myRPC-server
 
-SRC_DIR = src
-BUILD_DIR = build
-BIN_DIR = bin
+all: $(BIN)
 
-CLIENT_SRC = $(SRC_DIR)/client/myRPC-client.c
-SERVER_SRC = $(SRC_DIR)/server/myRPC-server.c
-LIB_SRC    = $(SRC_DIR)/mysyslog/mysyslog.c
+$(OBJ): $(SRC)
+	mkdir -p ../../build
+	$(CC) $(CFLAGS) -c $(SRC) -o $(OBJ)
 
-CLIENT_OBJ = $(BUILD_DIR)/myRPC-client.o
-SERVER_OBJ = $(BUILD_DIR)/myRPC-server.o
-LIB_OBJ    = $(BUILD_DIR)/mysyslog.o
-
-CLIENT_BIN = $(BIN_DIR)/myRPC-client
-SERVER_BIN = $(BIN_DIR)/myRPC-server
-
-all: dirs $(CLIENT_BIN) $(SERVER_BIN)
-
-dirs:
-	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
-
-$(CLIENT_BIN): $(CLIENT_OBJ) $(LIB_OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(JSONC_FLAGS)
-
-$(SERVER_BIN): $(SERVER_OBJ) $(LIB_OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(JSONC_FLAGS)
-
-$(BUILD_DIR)/%.o: $(SRC_DIR)/client/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: $(SRC_DIR)/server/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/mysyslog.o: $(SRC_DIR)/mysyslog/mysyslog.c
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+$(BIN): $(OBJ) $(SYSLOG_OBJ)
+	$(CC) $(OBJ) $(SYSLOG_OBJ) -o $(BIN) $(LDFLAGS)
 
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -f $(OBJ) $(BIN)
 	rm -rf build-deb
-	bash clean.sh
 
-.PHONY: all clean dirs
+deb: all
+	mkdir -p build-deb/usr/local/bin
+	mkdir -p build-deb/etc/myRPC
+	mkdir -p build-deb/lib/systemd/system
+	mkdir -p build-deb/DEBIAN
+	cp $(BIN) build-deb/usr/local/bin/
+	cp ../../src/config/myRPC.conf build-deb/etc/myRPC/
+	cp ../../src/config/users.conf build-deb/etc/myRPC/
+	cp ../../src/config/myRPC-server.service build-deb/lib/systemd/system/
+	echo "Package: $(NAME)" > build-deb/DEBIAN/control
+	echo "Version: 1.0" >> build-deb/DEBIAN/control
+	echo "Section: base" >> build-deb/DEBIAN/control
+	echo "Priority: optional" >> build-deb/DEBIAN/control
+	echo "Architecture: amd64" >> build-deb/DEBIAN/control
+	echo "Maintainer: AACnotAliVe <mrlenorgenri@gmail.com>" >> build-deb/DEBIAN/control
+	echo "Description: myRPC-server daemon with systemd service" >> build-deb/DEBIAN/control
+	chmod 0755 build-deb/DEBIAN
+	chmod g-s build-deb/DEBIAN
+	chmod 644 build-deb/DEBIAN/control
+	echo "#!/bin/bash" > build-deb/DEBIAN/postinst
+	echo "set -e" >> build-deb/DEBIAN/postinst
+	echo "systemctl daemon-reload" >> build-deb/DEBIAN/postinst
+	echo "systemctl enable myRPC-server.service" >> build-deb/DEBIAN/postinst
+	echo "systemctl restart myRPC-server.service || systemctl start myRPC-server.service" >> build-deb/DEBIAN/postinst
+	echo "exit 0" >> build-deb/DEBIAN/postinst
+	chmod 755 build-deb/DEBIAN/postinst
+	echo "#!/bin/bash" > build-deb/DEBIAN/prerm
+	echo "set -e" >> build-deb/DEBIAN/prerm
+	echo "if systemctl is-active --quiet myRPC-server.service; then" >> build-deb/DEBIAN/prerm
+	echo "    systemctl stop myRPC-server.service" >> build-deb/DEBIAN/prerm
+	echo "fi" >> build-deb/DEBIAN/prerm
+	echo "systemctl disable myRPC-server.service" >> build-deb/DEBIAN/prerm
+	echo "systemctl daemon-reload" >> build-deb/DEBIAN/prerm
+	echo "exit 0" >> build-deb/DEBIAN/prerm
+	chmod 755 build-deb/DEBIAN/prerm
+	mkdir -p ../../deb
+	fakeroot dpkg-deb --build build-deb ../../deb/$(NAME)_1.0_amd64.deb
