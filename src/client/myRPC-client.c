@@ -12,6 +12,7 @@
 
 #define BUF_SIZE 4096
 
+// Вывод помощи
 void print_usage(const char *prog) {
     printf("Usage: %s [OPTIONS]\n", prog);
     printf("Options:\n");
@@ -108,7 +109,6 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        // UDP: ставим таймаут на приём
         struct timeval tv = {5, 0};
         setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
