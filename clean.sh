@@ -2,8 +2,8 @@
 
 set -e
 
-echo "Clear garbage tmp filess"
+echo "Начинаю очищать лог файлы"
 
 find /tmp/ -maxdepth 1 -type f -name 'myRPC*' -exec rm -f {} +
 
-echo "Finished."
+echo "Очистка завершена"
