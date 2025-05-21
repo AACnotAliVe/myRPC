@@ -61,7 +61,7 @@ socket_type = <stream (TCP),dgram (UDP)>
 
 ### clean.sh
 
-Удаляет лишние файлы myRPC_XXXXXX в /tmp/
+При вводе make clean. Удаляет лишние файлы myRPC_XXXXXX в /tmp/
 
 ## Требования
 
@@ -128,10 +128,42 @@ sudo apt install myRPC-client myRPC-server mysyslog
 
    ```
 
-link: http://localhost:8000/Packages.gz
+Можно скачать по ссылке: http://localhost:8000/Packages.gz
 
 ## Запуск проекта
 
 Если все готово то можно запускать проект:
 
 ## myRPC-server
+
+Он должен автоматически установиться при скачивании .deb пакета.
+Если этого не произошло значит попробуйте вручную.
+
+Узнаем статус демона:
+   ```bash
+   systemctl status myRPC-server
+   ```
+Перезапускаем демоны:
+   ```bash
+   systemctl daemon-reload
+   ```
+Перезапускаем сервер:
+   ```bash
+   systemctl restart myRPC-server
+   ```
+
+Если вы изменили myRPC.conf или users.conf в папке /etc/myRPC/
+
+Значит нужно перезагрузить сервер.
+   ```bash
+   systemctl restart myRPC-server
+   ```
+
+## myRPC-client
+
+С клиентом все куда проще.
+Его можно запускать через папку bin в myRPC или если вы установили .deb пакет значит myRPC-client. 
+Запуск через /bin/myRPC-client
+   ```bash
+   ./bin/myRPC-client <ключи>
+   ```
