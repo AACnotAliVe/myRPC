@@ -66,7 +66,7 @@ socket_type = <stream (TCP),dgram (UDP)>
 ## Требования
 
 - gcc (Компилятор языка Си)
-- python или nginx (Сетевой репозиторий)
+- python (Сетевой репозиторий)
 - git (Клонирование репозитория)
 - make (Сборка проекта)
 - fakeroot (создание .deb пакетов)
@@ -102,8 +102,6 @@ socket_type = <stream (TCP),dgram (UDP)>
 
 Сетевой репозиторий позволяет подключаться клиенту по локальной сети и устанавливать нужные deb. пакеты.
 
-### Способ 1 (python)
-
 Для того чтобы запустить репозиторий перейдите:
 
    ```bash
@@ -128,15 +126,6 @@ socket_type = <stream (TCP),dgram (UDP)>
    sudo apt update
 sudo apt install myRPC-client myRPC-server mysyslog
 
-   ```
-### Способ 2 (сайт)
-
-Для этого будем использовать nginx.
-
-Скопируем наш репозиторий в удобное место:
-   ```bash
-sudo mkdir -p /var/www/myrpc-repository
-sudo cp -r /<путь к repo>/* /var/www/myrpc-repository/
    ```
 
 
