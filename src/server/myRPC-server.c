@@ -16,6 +16,7 @@
 
 #define BUFFER_SIZE 4096
 
+// Проверка, есть ли пользователь в /etc/myRPC/users.conf
 int user_allowed(const char *username) {
     FILE *fp = fopen("/etc/myRPC/users.conf", "r");
     if (!fp) return 0;
@@ -32,6 +33,7 @@ int user_allowed(const char *username) {
     return 0;
 }
 
+// Удаление пробелов и табуляции с краёв строки
 char *trim(char *str) {
     while (*str == ' ' || *str == '\t') str++;
     char *end = str + strlen(str) - 1;
@@ -39,6 +41,7 @@ char *trim(char *str) {
     return str;
 }
 
+// Экранирование строки для безопасной передачи в `sh -c`
 char *shell_escape(const char *input) {
     size_t len = strlen(input);
     char *escaped = malloc(len * 4 + 3);
@@ -59,6 +62,7 @@ char *shell_escape(const char *input) {
     return escaped;
 }
 
+// Чтение содержимого файла в строку
 char *read_file(const char *filename) {
     FILE *fp = fopen(filename, "r");
     if (!fp) return strdup("(empty)");
@@ -75,13 +79,14 @@ char *read_file(const char *filename) {
     return content;
 }
 
+// Обработка JSON-запроса и формирование JSON-ответа
 void handle_request(const char *buffer, char *response_json) {
     struct json_object *jobj = json_tokener_parse(buffer);
     struct json_object *resp = json_object_new_object();
 
     if (!jobj) {
         json_object_object_add(resp, "code", json_object_new_int(1));
-        json_object_object_add(resp, "result", json_object_new_string("Invalid JSON"));
+        json_object_object_add(resp, "result", json_object_new_string("Неверный JSON"));
         strcpy(response_json, json_object_to_json_string(resp));
         json_object_put(resp);
         return;
@@ -92,17 +97,18 @@ void handle_request(const char *buffer, char *response_json) {
 
     if (!login || !cmd) {
         json_object_object_add(resp, "code", json_object_new_int(1));
-        json_object_object_add(resp, "result", json_object_new_string("Missing fields"));
+        json_object_object_add(resp, "result", json_object_new_string("Ошибка полей"));
     } else if (!user_allowed(login)) {
         json_object_object_add(resp, "code", json_object_new_int(1));
-        json_object_object_add(resp, "result", json_object_new_string("Access denied"));
+        json_object_object_add(resp, "result", json_object_new_string("Доступ запрещен"));
     } else {
+        // Создаём временный файл
         char tmp_template[] = "/tmp/myRPC_XXXXXX";
         int tmp_fd = mkstemp(tmp_template);
         if (tmp_fd < 0) {
             log_error("mkstemp failed: %s", strerror(errno));
             json_object_object_add(resp, "code", json_object_new_int(1));
-            json_object_object_add(resp, "result", json_object_new_string("Temp file creation failed"));
+            json_object_object_add(resp, "result", json_object_new_string("Неудачное создание файла"));
         } else {
             close(tmp_fd);
             char out_file[256], err_file[256];
@@ -115,6 +121,7 @@ void handle_request(const char *buffer, char *response_json) {
                 json_object_object_add(resp, "code", json_object_new_int(1));
                 json_object_object_add(resp, "result", json_object_new_string("Internal error"));
             } else {
+                // Выполнение команды с перенаправлением вывода
                 char command[1024];
                 snprintf(command, sizeof(command), "sh -c %s > %s 2> %s", safe_cmd, out_file, err_file);
                 free(safe_cmd);
@@ -137,16 +144,17 @@ void handle_request(const char *buffer, char *response_json) {
 int main() {
     log_info("Запуск myRPC-server");
 
+    // Значения по умолчанию
     int port = 1234;
-    int use_stream = 1;
+    int use_stream = 1; // TCP по умолчанию
 
+    // Чтение конфигурации
     FILE *conf = fopen("/etc/myRPC/myRPC.conf", "r");
     if (conf) {
         char line[256];
         while (fgets(line, sizeof(line), conf)) {
-            line[strcspn(line, "\n")] = 0;  // удаляем \n
+            line[strcspn(line, "\n")] = 0;
             char *trimmed = trim(line);
-
             if (trimmed[0] == '#' || strlen(trimmed) == 0) continue;
 
             if (strstr(trimmed, "port")) {
@@ -167,12 +175,14 @@ int main() {
     log_info("Порт из конфига: %d", port);
     log_info("Тип сокета: %s", use_stream ? "stream" : "dgram");
 
+    // Создание сокета
     int sockfd = socket(AF_INET, use_stream ? SOCK_STREAM : SOCK_DGRAM, 0);
     if (sockfd < 0) {
         log_error("socket: %s", strerror(errno));
         exit(1);
     }
 
+    // Привязка сокета
     struct sockaddr_in server_addr = {
         .sin_family = AF_INET,
         .sin_port = htons(port),
@@ -184,6 +194,7 @@ int main() {
         exit(1);
     }
 
+    // Прослушивание (только для TCP)
     if (use_stream && listen(sockfd, 5) < 0) {
         log_error("listen: %s", strerror(errno));
         exit(1);
@@ -191,6 +202,7 @@ int main() {
 
     log_info("Сервер запущен. Ожидание подключений...");
 
+    // Основной цикл обработки подключений
     while (1) {
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
@@ -215,12 +227,12 @@ int main() {
 
             char response_json[BUFFER_SIZE];
             handle_request(buffer, response_json);
-            char *reply = response_json;  // ваша функция обработки JSON-запроса
-            send(client_sock, reply, strlen(reply), 0);
+            send(client_sock, response_json, strlen(response_json), 0);
 
             close(client_sock);
 
         } else {
+            // UDP режим
             ssize_t recv_len = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
                                         (struct sockaddr *)&client_addr, &client_len);
             if (recv_len < 0) {
@@ -233,8 +245,7 @@ int main() {
 
             char response_json[BUFFER_SIZE];
             handle_request(buffer, response_json);
-            char *reply = response_json;
-            sendto(sockfd, reply, strlen(reply), 0,
+            sendto(sockfd, response_json, strlen(response_json), 0,
                    (struct sockaddr *)&client_addr, client_len);
         }
     }
