@@ -128,6 +128,7 @@ sudo apt install myRPC-client myRPC-server mysyslog
 
    ```
 
+link: http://localhost:8000/Packages.gz
 
 ## Запуск проекта
 
