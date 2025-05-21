@@ -1,9 +1,16 @@
-Place service here!
-/lib/systemd/system/myRPC-server.service - final
+# Конфиги
 
+Они нужны для работы сервера.
 
-ADD
-/usr/local/bin/myRPC-server -c /etc/myRPC/myRPC.conf
+## myRPC-server.service
+
+Файл для активации демона
+
+Поместите его в:
+/lib/systemd/system/myRPC-server.service
+
+Ск
+/usr/local/bin/myRPC-server
 
 
 
