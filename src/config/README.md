@@ -9,10 +9,15 @@
 Поместите его в:
 /lib/systemd/system/myRPC-server.service
 
-Ск
-/usr/local/bin/myRPC-server
+Скопируйте собранный сервер сюда:
 
+   ```bash
+   cp -f myRPC/bin/myRPC-server /usr/local/bin/myRPC-server
+   ```
 
+## Конфиги
 
-USE
-/etc/myRPC/users.conf , /etc/myRPC/myRPC.conf
+Обязательно имейте конфиги по пути:
+/etc/myRPC/users.conf
+/etc/myRPC/myRPC.conf
+Настройка на главной странице! 
