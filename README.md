@@ -163,7 +163,21 @@ sudo apt install myRPC-client myRPC-server mysyslog
 
 С клиентом все куда проще.
 Его можно запускать через папку bin в myRPC или если вы установили .deb пакет значит myRPC-client. 
-Запуск через /bin/myRPC-client
+Запуск через /bin/myRPC-client:
    ```bash
    ./bin/myRPC-client <ключи>
    ```
+Ключи:
+
+-c , команда
+-h , айпи
+-p , порт как в /etc/myRPC/myRPC.conf
+-d dgram / -s stream сокет как /etc/myRPC/myRPC.conf
+
+Пример рабочей команды:
+   ```bash
+   myRPC-client -c "echo Привет сервер" -h 127.0.0.1 -p 4040 -d
+   ```
+Если ваш пользователь не в списке то сервер пошлем вам код 1 и запрос отклонён.
+
+Если вы все сделали правильно значит вам сервер ответит!
