@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <time.h>
 
+// Уровни журналирования
 const char *level_str(int level) {
     switch (level) {
         case LOG_INFO: return "INFO";
@@ -13,6 +14,7 @@ const char *level_str(int level) {
     }
 }
 
+// Запись в файл
 void mysyslog(int level, const char *format, ...) {
     FILE *fp = fopen("/var/log/myrpc.log", "a");
     if (!fp) return;
