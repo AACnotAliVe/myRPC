@@ -116,16 +116,16 @@ socket_type = <stream (TCP),dgram (UDP)>
     python3 -m http.server <Порт>
    ```
 
-С клиента вводим:
+На клиенте создаем файл:
 
    ```bash
-    echo "deb [trusted=yes] http://<айпи или домен сервера:порт> ./" | sudo tee /etc/apt/sources.list.d/myrpc.list
+   echo "deb [trusted=yes] http://<айпи или домен сервера:порт> ./" | sudo tee /etc/apt/sources.list.d/myrpc.list
    ```
 
 Затем: 
 
    ```bash
-    sudo apt update
+   sudo apt update
 sudo apt install myRPC-client myRPC-server mysyslog
 
    ```
@@ -135,7 +135,7 @@ sudo apt install myRPC-client myRPC-server mysyslog
 
 Скопируем наш репозиторий в удобное место:
    ```bash
-    sudo mkdir -p /var/www/myrpc-repository
+sudo mkdir -p /var/www/myrpc-repository
 sudo cp -r /<путь к repo>/* /var/www/myrpc-repository/
    ```
 
