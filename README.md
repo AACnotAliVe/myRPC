@@ -94,6 +94,11 @@ socket_type = <stream (TCP),dgram (UDP)>
    ```bash
     make repo
    ```
+
+6. Создайте общий репозиторий .deb пакетов (mysyslog должен быть собран!):
+   ```bash
+    make repository 
+   ```
    
 ## Сетевой репозиторий 
 
