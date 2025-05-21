@@ -66,10 +66,10 @@ socket_type = <stream (TCP),dgram (UDP)>
 ## Требования
 
 - gcc (Компилятор языка Си)
-- python (Сетевой репозиторий)
+- python или nginx (Сетевой репозиторий)
 - git (Клонирование репозитория)
 - make (Сборка проекта)
-- fakeroot
+- fakeroot (создание .deb пакетов)
 
 ## Сборка проекта
 
@@ -121,9 +121,27 @@ socket_type = <stream (TCP),dgram (UDP)>
    ```bash
     echo "deb [trusted=yes] http://<айпи или домен сервера:порт> ./" | sudo tee /etc/apt/sources.list.d/myrpc.list
    ```
-### Способ 2 (локально)
 
-## Возможные проблемы
+Затем: 
+
+   ```bash
+    sudo apt update
+sudo apt install myRPC-client myRPC-server mysyslog
+
+   ```
+### Способ 2 (сайт)
+
+Для этого будем использовать nginx.
+
+Скопируем наш репозиторий в удобное место:
+   ```bash
+    sudo mkdir -p /var/www/myrpc-repository
+sudo cp -r /<путь к repo>/* /var/www/myrpc-repository/
+   ```
 
 
 ## Запуск проекта
+
+Если все готово то можно запускать проект:
+
+## myRPC-server
